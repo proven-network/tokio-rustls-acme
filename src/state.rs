@@ -10,7 +10,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use futures::future::try_join_all;
 use futures::{ready, FutureExt, Stream};
 use rcgen::{CertificateParams, DistinguishedName, Error as RcgenError, PKCS_ECDSA_P256_SHA256};
-use rustls::crypto::ring::sign::any_ecdsa_type;
+use rustls::crypto::aws_lc_rs::sign::any_ecdsa_type;
 use rustls::pki_types::{CertificateDer as RustlsCertificate, PrivateKeyDer, PrivatePkcs8KeyDer};
 use rustls::sign::CertifiedKey;
 use thiserror::Error;

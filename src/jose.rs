@@ -1,8 +1,8 @@
+use aws_lc_rs::digest::{digest, Digest, SHA256};
+use aws_lc_rs::rand::SystemRandom;
+use aws_lc_rs::signature::{EcdsaKeyPair, KeyPair};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use ring::digest::{digest, Digest, SHA256};
-use ring::rand::SystemRandom;
-use ring::signature::{EcdsaKeyPair, KeyPair};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -32,14 +32,14 @@ pub(crate) fn sign(
 
 pub(crate) fn sign_eab(
     key: &EcdsaKeyPair,
-    eab_key: &ring::hmac::Key,
+    eab_key: &aws_lc_rs::hmac::Key,
     kid: &str,
     url: &str,
 ) -> Result<Body, JoseError> {
     let protected = Protected::hmac_base64(kid, url)?;
     let payload = URL_SAFE_NO_PAD.encode(serde_json::to_vec(&Jwk::new(key))?);
     let combined = format!("{}.{}", &protected, &payload);
-    let signature = ring::hmac::sign(eab_key, combined.as_bytes());
+    let signature = aws_lc_rs::hmac::sign(eab_key, combined.as_bytes());
     let signature = URL_SAFE_NO_PAD.encode(signature.as_ref());
     let body = Body {
         protected,
@@ -157,5 +157,5 @@ pub enum JoseError {
     #[error("json serialization failed: {0}")]
     Json(#[from] serde_json::Error),
     #[error("crypto error: {0}")]
-    Crypto(#[from] ring::error::Unspecified),
+    Crypto(#[from] aws_lc_rs::error::Unspecified),
 }

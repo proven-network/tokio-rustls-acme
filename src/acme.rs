@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use crate::https_helper::{https, HttpsRequestError, Method, Response};
 use crate::jose::{key_authorization_sha256, sign, sign_eab, JoseError};
+use aws_lc_rs::error::{KeyRejected, Unspecified};
+use aws_lc_rs::rand::SystemRandom;
+use aws_lc_rs::signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, ECDSA_P256_SHA256_FIXED_SIGNING};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use rcgen::{CustomExtension, Error as RcgenError, PKCS_ECDSA_P256_SHA256};
-use ring::error::{KeyRejected, Unspecified};
-use ring::rand::SystemRandom;
-use ring::signature::{EcdsaKeyPair, EcdsaSigningAlgorithm, ECDSA_P256_SHA256_FIXED_SIGNING};
-use rustls::{crypto::ring::sign::any_ecdsa_type, sign::CertifiedKey};
+use rustls::{crypto::aws_lc_rs::sign::any_ecdsa_type, sign::CertifiedKey};
 use rustls::{
     pki_types::{PrivateKeyDer, PrivatePkcs8KeyDer},
     ClientConfig,
@@ -62,7 +62,7 @@ impl Account {
         S: AsRef<str> + 'a,
         I: IntoIterator<Item = &'a S>,
     {
-        let key_pair = EcdsaKeyPair::from_pkcs8(ALG, key_pair, &SystemRandom::new())?;
+        let key_pair = EcdsaKeyPair::from_pkcs8(ALG, key_pair)?;
         let contact: Vec<&'a str> = contact.into_iter().map(AsRef::<str>::as_ref).collect();
 
         let payload = if let Some(eab) = &eab.as_ref() {
@@ -233,14 +233,14 @@ impl Directory {
 /// See RFC 8555 section 7.3.4 for more information.
 pub struct ExternalAccountKey {
     pub kid: String,
-    pub key: ring::hmac::Key,
+    pub key: aws_lc_rs::hmac::Key,
 }
 
 impl ExternalAccountKey {
     pub fn new(kid: String, key: &[u8]) -> Self {
         Self {
             kid,
-            key: ring::hmac::Key::new(ring::hmac::HMAC_SHA256, key),
+            key: aws_lc_rs::hmac::Key::new(aws_lc_rs::hmac::HMAC_SHA256, key),
         }
     }
 }
